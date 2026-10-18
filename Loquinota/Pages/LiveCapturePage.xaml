@@ -1,0 +1,388 @@
+<Page
+    x:Class="Loquinota.Pages.LiveCapturePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mi="using:Material.Icons.WinUI3">
+
+    <ScrollViewer x:Name="PageScrollViewer"
+                  Padding="32,24,32,32"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel MaxWidth="1120" HorizontalAlignment="Stretch" Spacing="16">
+
+            <!-- ============================ HEADER ============================ -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Width="52" Height="52" CornerRadius="16"
+                        Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                        VerticalAlignment="Top">
+                    <mi:MaterialIcon Kind="RecordVoiceOver" Width="26" Height="26"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock Text="Live Capture" Style="{StaticResource MaterialHeadlineTextStyle}" />
+                    <TextBlock Text="Record your microphone or system audio, watch the transcript build up, and save it with AI notes. Everything stays on this PC."
+                               Style="{StaticResource MaterialBodyTextStyle}"
+                               Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ====================== MODEL STATUS ROW ======================== -->
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <Border x:Name="ModelReadyPill" Style="{StaticResource MaterialPillStyle}"
+                        Background="{ThemeResource MaterialSuccessBrush}" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="Check" Width="14" Height="14" VerticalAlignment="Center"
+                                         Foreground="{ThemeResource MaterialOnSuccessBrush}" />
+                        <TextBlock x:Name="ModelReadyText" Text="Model ready" FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Foreground="{ThemeResource MaterialOnSuccessBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="ModelMissingPill" Style="{StaticResource MaterialPillStyle}"
+                        Background="{ThemeResource MaterialErrorContainerBrush}" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <mi:MaterialIcon Kind="AlertCircle" Width="14" Height="14" VerticalAlignment="Center"
+                                         Foreground="{ThemeResource MaterialOnErrorContainerBrush}" />
+                        <TextBlock Text="No speech model" FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Foreground="{ThemeResource MaterialOnErrorContainerBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <ProgressRing x:Name="InitRing" Width="16" Height="16" IsActive="True" Visibility="Collapsed"
+                              Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                <TextBlock x:Name="HeaderStatusText" Text="Starting speech engine…" VerticalAlignment="Center"
+                           Style="{StaticResource MaterialCaptionTextStyle}" />
+            </StackPanel>
+
+            <!-- ======================== PAGE ERROR BAR ======================== -->
+            <InfoBar x:Name="PageInfoBar" IsOpen="False" Severity="Error" IsClosable="True"
+                     Title="Something went wrong" />
+
+            <!-- ======================== MODEL SETUP BAR ======================= -->
+            <InfoBar x:Name="ModelInfoBar" IsOpen="False" Severity="Warning" IsClosable="False"
+                     Title="Speech model needed"
+                     Message="Live transcription runs fully offline, but it needs a Whisper model file. Download one below, retry an installed model, or import a .bin/.gguf file you already have.">
+                <InfoBar.Content>
+                    <StackPanel Spacing="12" Margin="0,6,0,0">
+                        <Grid ColumnSpacing="12" RowSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ComboBox x:Name="ModelCombo" Header="Model" MinWidth="210"
+                                      DisplayMemberPath="DisplayName"
+                                      AutomationProperties.Name="Speech model" />
+
+                            <Button x:Name="DownloadButton" Grid.Column="1"
+                                    HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                    Style="{StaticResource MaterialFilledButtonStyle}"
+                                    Padding="18,8" Click="DownloadButton_Click"
+                                    AutomationProperties.Name="Download and load model"
+                                    AutomationProperties.AutomationId="DownloadButton">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <mi:MaterialIcon Kind="Download" Width="18" Height="18"
+                                                     Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                    <TextBlock Text="Download &amp; load" VerticalAlignment="Center"
+                                               Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="RetryButton" Content="Retry load"
+                                        Style="{StaticResource MaterialTextButtonStyle}"
+                                        Click="RetryButton_Click"
+                                        AutomationProperties.Name="Retry loading the model"
+                                        AutomationProperties.AutomationId="RetryButton" />
+                                <Button x:Name="ImportButton"
+                                        Style="{StaticResource MaterialOutlinedButtonStyle}"
+                                        Padding="16,8" Click="ImportButton_Click"
+                                        AutomationProperties.Name="Use local model"
+                                        AutomationProperties.AutomationId="ImportButton">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <mi:MaterialIcon Kind="FolderOpen" Width="18" Height="18"
+                                                         Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                                        <TextBlock Text="Use local model…" VerticalAlignment="Center"
+                                                   Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel x:Name="DownloadProgressPanel" Visibility="Collapsed" Spacing="6">
+                            <ProgressBar x:Name="DownloadProgressBar"
+                                         Style="{StaticResource MaterialProgressBarStyle}"
+                                         Maximum="1" Value="0" IsIndeterminate="True" />
+                            <TextBlock x:Name="DownloadStatusText" Text=""
+                                       Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+
+            <!-- ======================= CAPTURE SETTINGS ======================= -->
+            <Border x:Name="SettingsCard" Style="{StaticResource MaterialCardStyle}">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Audio sources" Style="{StaticResource MaterialSectionTitleTextStyle}" />
+                        <TextBlock Text="Pick what to record — the two sources are mixed together."
+                                   Style="{StaticResource MaterialCaptionTextStyle}" />
+                    </StackPanel>
+
+                    <Grid ColumnSpacing="28">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Spacing="8">
+                            <ToggleSwitch x:Name="MicrophoneToggle" Header="Microphone"
+                                          OnContent="On" OffContent="Off"
+                                          Toggled="CaptureToggle_Toggled" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="MicrophoneCombo" Header="Input device"
+                                          HorizontalAlignment="Stretch" DisplayMemberPath="Name"
+                                          AutomationProperties.Name="Microphone input device"
+                                          SelectionChanged="MicrophoneCombo_SelectionChanged" />
+                                <Button x:Name="RefreshDevicesButton" Grid.Column="1"
+                                        Style="{StaticResource MaterialIconButtonStyle}"
+                                        VerticalAlignment="Bottom" Click="RefreshDevicesButton_Click"
+                                        ToolTipService.ToolTip="Refresh the device list"
+                                        AutomationProperties.Name="Refresh audio devices"
+                                        AutomationProperties.AutomationId="RefreshDevicesButton">
+                                    <mi:MaterialIcon Kind="Refresh" Width="18" Height="18"
+                                                     Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="8">
+                            <ToggleSwitch x:Name="SystemAudioToggle" Header="System audio (loopback)"
+                                          OnContent="On" OffContent="Off"
+                                          Toggled="CaptureToggle_Toggled" />
+                            <TextBlock x:Name="SpeakerLabel"
+                                       Style="{StaticResource MaterialCaptionTextStyle}"
+                                       Text="Detecting the default output device…" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="CaptureHintText"
+                               Text="Enable the microphone, system audio, or both to start recording."
+                               Style="{StaticResource MaterialBodyTextStyle}" FontSize="13"
+                               Foreground="{ThemeResource MaterialErrorBrush}" Visibility="Collapsed" />
+                </StackPanel>
+            </Border>
+
+            <!-- ======================== RECORD CONTROLS ======================= -->
+            <Border x:Name="RecordCard" Style="{StaticResource MaterialSheetStyle}">
+                <StackPanel Spacing="16">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid VerticalAlignment="Center">
+                            <Button x:Name="StartButton" MinWidth="230" Height="56" Padding="28,0"
+                                    Style="{StaticResource MaterialFilledButtonStyle}"
+                                    Click="StartButton_Click"
+                                    AutomationProperties.Name="Start recording"
+                                    AutomationProperties.AutomationId="StartButton">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <mi:MaterialIcon Kind="Record" Width="22" Height="22"
+                                                     Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                    <TextBlock Text="Start recording" FontSize="15" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="StopButton" MinWidth="230" Height="56" Padding="28,0"
+                                    Visibility="Collapsed"
+                                    Style="{StaticResource MaterialDangerButtonStyle}"
+                                    Click="StopButton_Click"
+                                    AutomationProperties.Name="Stop and transcribe"
+                                    AutomationProperties.AutomationId="StopButton">
+                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                    <mi:MaterialIcon Kind="Stop" Width="22" Height="22"
+                                                     Foreground="{ThemeResource MaterialOnErrorBrush}" />
+                                    <TextBlock Text="Stop &amp; transcribe" FontSize="15" FontWeight="SemiBold"
+                                               VerticalAlignment="Center"
+                                               Foreground="{ThemeResource MaterialOnErrorBrush}" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center" Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="ClockOutline" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                                <TextBlock x:Name="ElapsedText" Text="00:00" FontSize="32" FontWeight="SemiBold"
+                                           Foreground="{ThemeResource MaterialOnSurfaceBrush}"
+                                           AutomationProperties.Name="Elapsed time" />
+                            </StackPanel>
+                            <TextBlock Text="Elapsed recording time"
+                                       Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Width="220" Spacing="6" VerticalAlignment="Center">
+                            <Grid>
+                                <TextBlock Text="Input level"
+                                           Style="{StaticResource MaterialCaptionTextStyle}" />
+                                <TextBlock x:Name="LevelText" Text="0%"
+                                           Style="{StaticResource MaterialCaptionTextStyle}"
+                                           HorizontalAlignment="Right" />
+                            </Grid>
+                            <ProgressBar x:Name="LevelBar" Height="10" Maximum="100" Value="0"
+                                         Style="{StaticResource MaterialProgressBarStyle}"
+                                         AutomationProperties.Name="Input level" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <ProgressRing x:Name="BusyRing" Width="16" Height="16" IsActive="False"
+                                      Visibility="Collapsed"
+                                      Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                        <TextBlock x:Name="StatusText" Text="Ready."
+                                   Style="{StaticResource MaterialBodyTextStyle}"
+                                   Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ======================== LIVE TRANSCRIPT ======================= -->
+            <Border x:Name="TranscriptCard" Style="{StaticResource MaterialCardStyle}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Live transcript"
+                                       Style="{StaticResource MaterialSectionTitleTextStyle}" />
+                            <TextBlock Text="Text appears every few seconds while the audio is being transcribed."
+                                       Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+                        <Border x:Name="TranscriptPill" Grid.Column="1"
+                                Style="{StaticResource MaterialPillStyle}"
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <mi:MaterialIcon Kind="Waveform" Width="14" Height="14"
+                                                 VerticalAlignment="Center"
+                                                 Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                <TextBlock x:Name="TranscriptPillText" Text="Listening…" FontSize="12"
+                                           FontWeight="SemiBold" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <TextBox x:Name="TranscriptBox" IsReadOnly="True" AcceptsReturn="True"
+                             TextWrapping="Wrap" MinHeight="220" MaxHeight="360"
+                             IsSpellCheckEnabled="False" IsTextPredictionEnabled="False"
+                             PlaceholderText="Listening… start a recording to see the transcript."
+                             AutomationProperties.Name="Live transcript"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
+
+            <!-- ========================= SAVE FEEDBACK ======================== -->
+            <InfoBar x:Name="SavedInfoBar" IsOpen="False" Severity="Success" IsClosable="True"
+                     Title="Session saved" Message="The session was added to History.">
+                <InfoBar.ActionButton>
+                    <Button x:Name="OpenSessionButton" Content="Open session"
+                            Style="{StaticResource MaterialTextButtonStyle}"
+                            Click="OpenSessionButton_Click"
+                            AutomationProperties.Name="Open session"
+                            AutomationProperties.AutomationId="OpenSessionButton" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <!-- ========================== REVIEW STATE ======================== -->
+            <Border x:Name="ReviewCard" Style="{StaticResource MaterialCardStyle}"
+                    Visibility="Collapsed">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Review &amp; save"
+                                   Style="{StaticResource MaterialSectionTitleTextStyle}" />
+                        <TextBlock Text="Tidy up the title, notes and transcript, then save the session to History."
+                                   Style="{StaticResource MaterialCaptionTextStyle}" />
+                    </StackPanel>
+
+                    <TextBox x:Name="ReviewTitleBox" Header="Title" MaxLength="140"
+                             PlaceholderText="Session title"
+                             AutomationProperties.Name="Session title" />
+
+                    <TextBox x:Name="ReviewNotesBox" Header="Notes" AcceptsReturn="True"
+                             TextWrapping="Wrap" MinHeight="130" MaxHeight="210"
+                             IsSpellCheckEnabled="False"
+                             AutomationProperties.Name="Session notes"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+                    <TextBox x:Name="ReviewTranscriptBox" Header="Transcript" AcceptsReturn="True"
+                             TextWrapping="Wrap" MinHeight="140" MaxHeight="240"
+                             IsSpellCheckEnabled="False"
+                             AutomationProperties.Name="Session transcript"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="SaveButton" Style="{StaticResource MaterialFilledButtonStyle}"
+                                Click="SaveButton_Click"
+                                AutomationProperties.Name="Save session"
+                                AutomationProperties.AutomationId="SaveButton">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <mi:MaterialIcon Kind="ContentSave" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                <TextBlock Text="Save session" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="DiscardButton" Style="{StaticResource MaterialOutlinedButtonStyle}"
+                                Click="DiscardButton_Click"
+                                AutomationProperties.Name="Discard"
+                                AutomationProperties.AutomationId="DiscardButton">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <mi:MaterialIcon Kind="TrashCan" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                                <TextBlock Text="Discard" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="NewRecordingButton" Visibility="Collapsed"
+                                Style="{StaticResource MaterialTonalButtonStyle}"
+                                Click="NewRecordingButton_Click"
+                                AutomationProperties.Name="New recording"
+                                AutomationProperties.AutomationId="NewRecordingButton">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <mi:MaterialIcon Kind="Microphone" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                <TextBlock Text="New recording" VerticalAlignment="Center"
+                                           Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

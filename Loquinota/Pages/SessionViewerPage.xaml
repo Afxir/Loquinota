@@ -1,0 +1,217 @@
+<Page
+    x:Class="Loquinota.Pages.SessionViewerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mi="using:Material.Icons.WinUI3">
+
+    <Grid>
+        <ScrollViewer Padding="32,24,32,32" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" MaxWidth="1080" HorizontalAlignment="Stretch">
+
+                <!-- ============================== HEADER ============================= -->
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Style="{StaticResource MaterialIconButtonStyle}"
+                            VerticalAlignment="Center"
+                            Click="Back_Click"
+                            ToolTipService.ToolTip="Back">
+                        <mi:MaterialIcon Kind="ArrowLeft" Width="20" Height="20"
+                                         Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                    </Button>
+
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock x:Name="HeaderTitleText"
+                                   Text="Session"
+                                   Style="{StaticResource MaterialTitleTextStyle}"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="HeaderSubtitleText"
+                                   Text="Loading…"
+                                   Style="{StaticResource MaterialCaptionTextStyle}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button x:Name="SaveButton"
+                                Style="{StaticResource MaterialFilledButtonStyle}"
+                                Click="Save_Click"
+                                IsEnabled="False">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="ContentSave" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialOnPrimaryBrush}" />
+                                <TextBlock Text="Save" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="ExportButton"
+                                Style="{StaticResource MaterialOutlinedButtonStyle}"
+                                Click="Export_Click"
+                                IsEnabled="False">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <mi:MaterialIcon Kind="Download" Width="18" Height="18"
+                                                 Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                                <TextBlock Text="Export TXT" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="DeleteButton"
+                                Style="{StaticResource MaterialIconButtonStyle}"
+                                Click="Delete_Click"
+                                IsEnabled="False"
+                                ToolTipService.ToolTip="Delete this session">
+                            <mi:MaterialIcon Kind="Delete" Width="20" Height="20"
+                                             Foreground="{ThemeResource MaterialErrorBrush}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <InfoBar x:Name="StatusInfoBar"
+                         IsOpen="False"
+                         IsClosable="True"
+                         Severity="Informational"
+                         Title="Status" />
+
+                <!-- =========================== NOT FOUND =========================== -->
+                <Border x:Name="NotFoundCard"
+                        Style="{StaticResource MaterialCardStyle}"
+                        Padding="32"
+                        Visibility="Collapsed">
+                    <StackPanel Spacing="12" HorizontalAlignment="Center" MaxWidth="480">
+                        <Border Width="64" Height="64" CornerRadius="20"
+                                Background="{ThemeResource MaterialErrorContainerBrush}"
+                                HorizontalAlignment="Center">
+                            <mi:MaterialIcon Kind="AlertCircle" Width="30" Height="30"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{ThemeResource MaterialOnErrorContainerBrush}" />
+                        </Border>
+                        <TextBlock x:Name="NotFoundTitleText"
+                                   Text="Session not found"
+                                   Style="{StaticResource MaterialTitleTextStyle}"
+                                   HorizontalAlignment="Center"
+                                   TextAlignment="Center" />
+                        <TextBlock x:Name="NotFoundMessageText"
+                                   Text="It may have been deleted. Go back to History to pick another session."
+                                   Style="{StaticResource MaterialBodyTextStyle}"
+                                   Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}"
+                                   TextAlignment="Center" />
+                        <Button Content="Back to History"
+                                Style="{StaticResource MaterialFilledButtonStyle}"
+                                HorizontalAlignment="Center"
+                                Click="BackToHistory_Click" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================== EDITOR ============================ -->
+                <StackPanel x:Name="EditorRoot" Spacing="16" Visibility="Collapsed">
+
+                    <Border Style="{StaticResource MaterialCardStyle}">
+                        <StackPanel Spacing="12">
+                            <TextBlock Text="TITLE" Style="{StaticResource MaterialLabelTextStyle}" />
+                            <TextBox x:Name="TitleBox"
+                                     PlaceholderText="Untitled session"
+                                     TextChanged="Editor_TextChanged" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2,0,0">
+                                <Border Style="{StaticResource MaterialPillStyle}"
+                                        Background="{ThemeResource MaterialPrimaryContainerBrush}">
+                                    <TextBlock x:Name="DatePillText" Text="—" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                                </Border>
+                                <Border Style="{StaticResource MaterialPillStyle}">
+                                    <TextBlock x:Name="DurationPillText" Text="—" FontSize="11"
+                                               Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                </Border>
+                                <Border Style="{StaticResource MaterialPillStyle}">
+                                    <TextBlock x:Name="SourcePillText" Text="—" FontSize="11"
+                                               Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                </Border>
+                                <Border Style="{StaticResource MaterialPillStyle}">
+                                    <TextBlock x:Name="ModelPillText" Text="—" FontSize="11"
+                                               Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource MaterialCardStyle}">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="NOTES" Style="{StaticResource MaterialLabelTextStyle}" />
+                                <TextBlock Grid.Column="1"
+                                           Text="Structured summary — edit freely"
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource MaterialCaptionTextStyle}" />
+                            </Grid>
+                            <TextBox x:Name="NotesBox"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MinHeight="260"
+                                     VerticalContentAlignment="Top"
+                                     IsSpellCheckEnabled="True"
+                                     TextChanged="Editor_TextChanged" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource MaterialCardStyle}">
+                        <StackPanel Spacing="10">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="TRANSCRIPT" Style="{StaticResource MaterialLabelTextStyle}" />
+                                <TextBlock x:Name="TranscriptStatsText" Grid.Column="1" Text=""
+                                           VerticalAlignment="Center"
+                                           Style="{StaticResource MaterialCaptionTextStyle}" />
+                            </Grid>
+                            <TextBox x:Name="TranscriptBox"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MinHeight="300"
+                                     VerticalContentAlignment="Top"
+                                     IsSpellCheckEnabled="True"
+                                     TextChanged="Editor_TextChanged" />
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="SaveFooterButton"
+                                Content="Save changes"
+                                Style="{StaticResource MaterialFilledButtonStyle}"
+                                Click="Save_Click"
+                                IsEnabled="False" />
+                        <Button x:Name="ExportFooterButton"
+                                Content="Export TXT"
+                                Style="{StaticResource MaterialOutlinedButtonStyle}"
+                                Click="Export_Click"
+                                IsEnabled="False" />
+                        <TextBlock x:Name="SaveStateText"
+                                   Text=""
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource MaterialCaptionTextStyle}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading overlay -->
+        <StackPanel x:Name="LoadingPanel"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="10"
+                    Visibility="Visible">
+            <ProgressRing IsActive="True" Width="36" Height="36" HorizontalAlignment="Center" />
+            <TextBlock Text="Opening session…"
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource MaterialCaptionTextStyle}" />
+        </StackPanel>
+    </Grid>
+</Page>

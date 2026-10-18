@@ -1,0 +1,234 @@
+<Page
+    x:Class="Loquinota.Pages.HistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mi="using:Material.Icons.WinUI3"
+    xmlns:local="using:Loquinota.Pages">
+
+    <Grid Padding="32,24,32,32">
+        <Grid MaxWidth="1080" HorizontalAlignment="Stretch" RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- ============================== HEADER ============================== -->
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="History" Style="{StaticResource MaterialHeadlineTextStyle}" />
+                    <TextBlock Text="Every session is stored on this PC. Open one to review or edit its notes and transcript."
+                               Style="{StaticResource MaterialBodyTextStyle}"
+                               Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                </StackPanel>
+
+                <Button x:Name="RefreshButton"
+                        Grid.Column="1"
+                        Style="{StaticResource MaterialOutlinedButtonStyle}"
+                        VerticalAlignment="Center"
+                        Click="Refresh_Click"
+                        ToolTipService.ToolTip="Reload the session list">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <mi:MaterialIcon Kind="Refresh" Width="18" Height="18"
+                                         Foreground="{ThemeResource MaterialPrimaryBrush}" />
+                        <TextBlock Text="Refresh" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- ============================= SUMMARY ============================== -->
+            <Grid Grid.Row="1" ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource MaterialCardStyle}" Padding="16">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="44" Height="44" CornerRadius="14"
+                                Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                                VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="History" Width="22" Height="22"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="TotalSessionsText" Text="—" FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource MaterialOnSurfaceBrush}" />
+                            <TextBlock Text="Sessions" Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource MaterialCardStyle}" Padding="16">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="44" Height="44" CornerRadius="14"
+                                Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                                VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="Timer" Width="22" Height="22"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="TotalDurationText" Text="—" FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource MaterialOnSurfaceBrush}" />
+                            <TextBlock Text="Total duration" Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource MaterialCardStyle}" Padding="16">
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="44" Height="44" CornerRadius="14"
+                                Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                                VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="AutoAwesome" Width="22" Height="22"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="LiveVsMp4Text" Text="—" FontSize="22" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource MaterialOnSurfaceBrush}" />
+                            <TextBlock Text="Live / MP4" Style="{StaticResource MaterialCaptionTextStyle}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ========================= STATUS + LOADING ======================== -->
+            <StackPanel Grid.Row="2" Spacing="8">
+                <InfoBar x:Name="StatusInfoBar"
+                         IsOpen="False"
+                         IsClosable="True"
+                         Severity="Error"
+                         Title="Something went wrong" />
+
+                <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" Spacing="10" Visibility="Collapsed">
+                    <ProgressRing IsActive="True" Width="18" Height="18" />
+                    <TextBlock Text="Loading sessions…" VerticalAlignment="Center"
+                               Style="{StaticResource MaterialCaptionTextStyle}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- =========================== LIST + EMPTY ========================== -->
+            <Grid Grid.Row="3">
+                <ListView x:Name="SessionsList"
+                          SelectionMode="None"
+                          IsItemClickEnabled="True"
+                          ItemClick="SessionsList_ItemClick"
+                          KeyDown="SessionsList_KeyDown"
+                          ItemContainerStyle="{StaticResource MaterialViewItemStyle}"
+                          ScrollViewer.VerticalScrollMode="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:HistoryItem">
+                            <Border Style="{StaticResource MaterialCardStyle}" Padding="16">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Width="48" Height="48" CornerRadius="16"
+                                            Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                                            VerticalAlignment="Center">
+                                        <Grid>
+                                            <mi:MaterialIcon Kind="Microphone" Width="24" Height="24"
+                                                             HorizontalAlignment="Center"
+                                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}"
+                                                             Visibility="{x:Bind LiveVisibility}" />
+                                            <mi:MaterialIcon Kind="MovieOpen" Width="24" Height="24"
+                                                             HorizontalAlignment="Center"
+                                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}"
+                                                             Visibility="{x:Bind Mp4Visibility}" />
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Title}"
+                                                   Style="{StaticResource MaterialSubtitleTextStyle}"
+                                                   TextWrapping="NoWrap"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind DateText}"
+                                                       Style="{StaticResource MaterialCaptionTextStyle}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="•"
+                                                       Style="{StaticResource MaterialCaptionTextStyle}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind DurationText}"
+                                                       Style="{StaticResource MaterialCaptionTextStyle}"
+                                                       VerticalAlignment="Center" />
+                                            <Border Style="{StaticResource MaterialPillStyle}" Padding="8,2">
+                                                <TextBlock Text="{x:Bind SourceLabel}" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{ThemeResource MaterialOnSecondaryContainerBrush}" />
+                                            </Border>
+                                            <TextBlock Text="{x:Bind WordsText}"
+                                                       Style="{StaticResource MaterialCaptionTextStyle}"
+                                                       VerticalAlignment="Center"
+                                                       Visibility="{x:Bind WordsVisibility}" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <mi:MaterialIcon Grid.Column="2" Kind="ChevronRight" Width="20" Height="20"
+                                                     VerticalAlignment="Center"
+                                                     Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Empty state -->
+                <Border x:Name="EmptyStatePanel"
+                        Style="{StaticResource MaterialCardStyle}"
+                        Padding="32"
+                        Visibility="Collapsed">
+                    <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
+                        <Border Width="64" Height="64" CornerRadius="20"
+                                Background="{ThemeResource MaterialPrimaryContainerBrush}"
+                                HorizontalAlignment="Center">
+                            <mi:MaterialIcon Kind="Waveform" Width="30" Height="30"
+                                             HorizontalAlignment="Center"
+                                             Foreground="{ThemeResource MaterialOnPrimaryContainerBrush}" />
+                        </Border>
+                        <TextBlock Text="No sessions yet" Style="{StaticResource MaterialTitleTextStyle}"
+                                   HorizontalAlignment="Center" TextAlignment="Center" />
+                        <TextBlock Text="Start a live capture or import an MP4 — transcripts and notes will appear here."
+                                   Style="{StaticResource MaterialBodyTextStyle}"
+                                   Foreground="{ThemeResource MaterialOnSurfaceVariantBrush}"
+                                   TextAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center" Margin="0,4,0,0">
+                            <Button Content="Start live capture"
+                                    Style="{StaticResource MaterialFilledButtonStyle}"
+                                    Click="StartLiveCapture_Click" />
+                            <Button Content="Import MP4"
+                                    Style="{StaticResource MaterialTonalButtonStyle}"
+                                    Click="ImportMp4_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>
